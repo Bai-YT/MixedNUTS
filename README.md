@@ -1,7 +1,7 @@
 # MixedNUTS: Training-Free Accuracy-Robustness Balance via Nonlinearly Mixed Classifiers
 
 This is the official code implementation of the preprint paper \
-*MixedNUTS: Training-Free Accuracy-Robustness Balance via Nonlinearly Mixed Classifiers* \
+*[MixedNUTS: Training-Free Accuracy-Robustness Balance via Nonlinearly Mixed Classifiers](https://arxiv.org/abs/2402.02263)* \
 by [Yatong Bai](https://bai-yt.github.io), [Mo Zhou](https://cdluminate.github.io), [Vishal M. Patel](https://engineering.jhu.edu/faculty/vishal-patel), and [Somayeh Sojoudi](https://www2.eecs.berkeley.edu/Faculty/Homepages/sojoudi.html).
 
 **TL;DR:** MixedNUTS balances clean data classification accuracy and adversarial robustness without additional training 
@@ -17,6 +17,7 @@ via a mixed classifier with nonlinear base model logit transformations.
 @article{MixedNUTS,
   title={MixedNUTS: Training-Free Accuracy-Robustness Balance via Nonlinearly Mixed Classifiers},
   author={Bai, Yatong and Zhou, Mo and Patel, Vishal M. and Sojoudi, Somayeh},
+  journal={arXiv preprint arXiv:2402.02263},
   year={2024}
 }
 ```
@@ -26,16 +27,19 @@ via a mixed classifier with nonlinear base model logit transformations.
 
 ### Model Checkpoints
 
-All robust base classifiers are available on [RobustBench](https://robustbench.github.io).
+MixedNUTS is a training-free method that has no additional neural network components other than its base classifiers.
 
-The ImageNet accurate base classifier is from 
-the [ConvNeXt-V2](https://github.com/facebookresearch/ConvNeXt-V2) repository and can be downloaded
-[here](https://dl.fbaipublicfiles.com/convnext/convnextv2/im22k/convnextv2_large_22k_224_ema.pt).
+All robust base classifiers used in the main result paper are available on [RobustBench](https://robustbench.github.io), and can be downloaded automatically via the RobustBench API.
 
-The CIFAR-10 and -100 accurate base classifiers are fine-tuned from 
-[BiT](https://github.com/google-research/big_transfer) checkpoints and will be released soon.
+Here, we provide the download links to the standard base classifiers used in our main results.
 
-Create a `base_models` directory and organize as follows:
+| Dataset   | Link  |
+|-----------|-------|
+| CIFAR-10  | [Download](http://172.233.227.28/base_models/cifar10/cifar10_std_rn152.pt)    |
+| CIFAR-100 | [Download](http://172.233.227.28/base_models/cifar100/cifar100_std_rn152.pt)  |
+| ImageNet  | [Download](https://dl.fbaipublicfiles.com/convnext/convnextv2/im22k/convnextv2_large_22k_224_ema.pt)  |
+
+After downloading the accurate base classifiers, create a `base_models` directory and organize as follows:
 ```
 base_models
 │
@@ -48,6 +52,10 @@ base_models
 └───imagenet
     └───imagenet_std_convnext_v2-l_224.pt
 ```
+
+<span style="color:gray"> The CIFAR-10 and -100 accurate base classifiers are fine-tuned from [BiT](https://github.com/google-research/big_transfer) checkpoints.
+The ImageNet accurate base classifier is from the
+[ConvNeXt-V2](https://github.com/facebookresearch/ConvNeXt-V2) repository. </span>
 
 ### Environment
 
