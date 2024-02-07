@@ -6,7 +6,6 @@ from utils.misc_utils import outer_prod
 
 
 class NonLinMixedClassifier(nn.Module):
-    enable_autocast = False
 
     def __init__(self, std_model: nn.Module, rob_model: nn.Module, forward_settings: dict):
         """ Initialize the MixedNUTS classifier.
@@ -47,21 +46,22 @@ class NonLinMixedClassifier(nn.Module):
 
         # alpha value (mixing balance)
         self.set_alpha_value(forward_settings["alpha"], forward_settings["alpha_diffable"])
-        self.use_nonlin_for_grad = forward_settings["use_nonlin_for_grad"]
-        print(f"{'Using' if self.use_nonlin_for_grad else 'Disabling'} "
-              "robust base model nonlinear transformation for gradient calculations.") 
+        self.use_nonlin_for_grad = forward_settings.get("use_nonlin_for_grad", False)
+        print(f"{'Using' if self.use_nonlin_for_grad else 'Bypassing'} "
+              "robust base model nonlinear transformation for gradient calculations.")
 
-        # Base model output mapping functions
-        self.std_map = forward_settings['std_map']
-        self.rob_map = forward_settings['rob_map']
-        self.softmax = nn.Softmax(dim=1)
+        # Base model logit transformations
+        self.std_map, self.rob_map = forward_settings['std_map'], forward_settings['rob_map']
+
+        # Enable autocast if specified
+        self.enable_autocast = forward_settings.get("enable_autocast", False)
+        print(f"{'Enabling' if self.enable_autocast else 'Disabling'} autocast.")
 
     def set_alpha_value(
         self, alpha: Union[float, int, Tensor, List],
         alpha_diffable: Union[float, int, Tensor, List], verbose=True
     ):
         """ Set the alpha value for the mixed classifier. """
-
         # Set alpha
         self._alpha = nn.parameter.Parameter(torch.tensor(alpha).float(), requires_grad=False)
         assert self._alpha.min() >= 0 and self._alpha.max() <= 1, \
@@ -89,18 +89,6 @@ class NonLinMixedClassifier(nn.Module):
         assert self._alpha.shape == self._alpha_diffable.shape, \
             "alpha and alpha_diffable must have the same shape."
 
-    def _do_checks(self, images: Tensor):
-        # Check eval mode
-        for model in [self.std_model, self.rob_model]:
-            assert not model.training
-
-        # Check devices match
-        if hasattr(self.std_model, "root") and (
-            self.std_model.root.conv.weight.device != images.device):
-            print(self.std_model.root.conv.weight.device,
-                  self.rob_model.logits.weight.device, images.device)
-            raise ValueError("Device mismatch!")
-
     def forward(self, images: Tensor, return_probs: bool = False, return_all: bool = False):
         """ Forward pass of the mixed classifier.
 
@@ -113,38 +101,48 @@ class NonLinMixedClassifier(nn.Module):
             return_all (bool, optional):
                 If True, return the mixed probs/logits, the differentiable mixed probs/logits
                 used for adversarial attack, and the alpha values.
-                Otherwise, only return the mixed probs/logits for compatibility with existing models.
-                Defaults to False.
+                Otherwise, only return the mixed probs/logits for compatibility with
+                existing models. Defaults to False.
 
         Returns:
             Tensor or tuple: Return values. See args for details.
         """
-        self._do_checks(images)
+        assert not self.std_model.training, "The accurate base classifier should be in eval mode."
+        assert not self.rob_model.training, "The robust base classifier should be in eval mode."
         return_device = images.device
+        enable_autocast = self.enable_autocast and torch.cuda.is_available()
+        raw_ratio = .9  # The ratio of the raw robust base model output to use for gradient
 
         # Base classifier forward passes
-        with torch.cuda.amp.autocast(
-            enabled=(self.enable_autocast and torch.cuda.is_available())
-        ):
-            # Single model special cases
-            if torch.numel(self._alpha) == 1 and self._alpha.item() == 0:  # STD Model only
+        # Accurate base classifier only
+        if torch.numel(self._alpha) == 1 and self._alpha.item() == 0:
+            with torch.cuda.amp.autocast(enabled=enable_autocast):
                 logits_std = self.std_model(images)
-                mapped_std = self.std_map(logits_std, return_probs=False).float()
-                assert not mapped_std.isnan().any()
-                alpha = torch.zeros((logits_std.shape[0],)).to(logits_std.device)
-                return (mapped_std, logits_std, alpha) if return_all else mapped_std
+            raw_std = logits_std.softmax(dim=1) if return_probs else logits_std
+            mapped_std = self.std_map(logits_std, return_probs=return_probs).float()
+            assert not mapped_std.isnan().any()
+            alpha = torch.zeros((logits_std.shape[0],)).to(logits_std.device)
+            return (mapped_std, raw_std, alpha) if return_all else mapped_std
 
-            elif torch.numel(self._alpha) == 1 and self._alpha.item() == 1:  # ROB Model only
+        # Robust base classifier only
+        elif torch.numel(self._alpha) == 1 and self._alpha.item() == 1:
+            with torch.cuda.amp.autocast(enabled=enable_autocast):
                 logits_rob = self.rob_model(images)
-                mapped_rob = self.rob_map(logits_rob, return_probs=False).float()
-                assert not mapped_rob.isnan().any()
-                alpha = torch.ones((logits_rob.shape[0],)).to(logits_rob.device)
-                return (mapped_rob, mapped_rob, alpha) if return_all else mapped_rob
+            raw_rob = logits_rob.softmax(dim=1) if return_probs else logits_rob
+            mapped_rob = self.rob_map(logits_rob, return_probs=return_probs).float()
+            assert not mapped_rob.isnan().any()
+            alpha = torch.ones((logits_rob.shape[0],)).to(logits_rob.device)
 
-            # General case -- use both models
-            logits_std = self.std_model(images)
-            logits_rob = self.rob_model(images)
-            assert logits_std.device == logits_rob.device
+            if self.use_nonlin_for_grad:
+                grad_rob = raw_rob * raw_ratio + mapped_rob * (1 - raw_ratio)
+            else:
+                grad_rob = mapped_rob
+            return (mapped_rob, grad_rob, alpha) if return_all else mapped_rob
+
+        # General case -- use both models
+        with torch.cuda.amp.autocast(enabled=enable_autocast):
+            logits_std, logits_rob = self.std_model(images), self.rob_model(images)
+        assert logits_std.device == logits_rob.device
 
         # Apply nonlinear logit transformations and convert to probabilities
         mapped_std = self.std_map(logits_std, return_probs=True)
@@ -165,13 +163,12 @@ class NonLinMixedClassifier(nn.Module):
             if self.use_nonlin_for_grad:
                 # Use the robust base model nonlinearity for gradient
                 mixed_probs_diffable = outer_prod(alpha, mapped_rob) + \
-                    outer_prod((1 - alpha), self.softmax(logits_std).to(mapped_std.device))
+                    outer_prod((1 - alpha), logits_std.softmax(dim=1).to(mapped_std.device))
                 mixed_logits_diffable = torch.log(mixed_probs_diffable)
             else:
                 # Disable the robust base model nonlinearity for gradient (usually stronger)
-                raw_ratio = .9
-                probs_std = self.softmax(logits_std).to(mapped_std.device)
-                probs_rob = self.softmax(logits_rob).to(mapped_rob.device)
+                probs_std = logits_std.softmax(dim=1).to(mapped_std.device)
+                probs_rob = logits_rob.softmax(dim=1).to(mapped_rob.device)
                 mixed_probs_diffable = \
                     outer_prod((1 - alphas_diffable), probs_std) + \
                     outer_prod(alphas_diffable * raw_ratio, probs_rob) + \

@@ -29,13 +29,20 @@ class IdentityMap(nn.Module):
 
 
 class HardMaxMap(nn.Module):
-    def __init__(self):
+    def __init__(self, ln_k=250):
         super().__init__()
+        self.approx = LNPowerScaleMap(scale=1e6, power=1, ln_k=ln_k, center_only=False)
 
-    def forward(self, logits, return_probs=False):
+    def forward_exact(self, logits, return_probs=False):
         probs = F.one_hot(logits.argmax(dim=1), num_classes=logits.shape[1]).float()
         mapped_output = probs if return_probs else (probs - 1e-12) * np.inf
         return mapped_output.cpu() if 'mps' in str(logits.device) else mapped_output
+
+    def forward(self, logits, return_probs=False):
+        if logits.grad_fn is not None:
+            return self.approx(logits, return_probs)
+        else:
+            return self.forward_exact(logits, return_probs)
 
 
 class ScaleMap(nn.Module):

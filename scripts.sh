@@ -12,7 +12,7 @@ python run_robustbench.py --root_dir base_models --dataset_name cifar10 \
     --adaptive --n_examples 10000 --batch_size_per_gpu 40
 python run_robustbench.py --root_dir base_models --dataset_name cifar10 \
     --rob_model_name Peng2023Robust --std_model_arch rn152 --map_type best \
-    --adaptive --n_examples 10000 --batch_size_per_gpu 40  --disable_nonlin_for_grad
+    --adaptive --n_examples 10000 --batch_size_per_gpu 40 --disable_nonlin_for_grad
 
 
 # Calculate margin for the CIFAR-100 SOTA models

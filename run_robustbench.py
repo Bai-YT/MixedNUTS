@@ -106,8 +106,9 @@ def run_robustbench(
     # Consolidate into forward_settings dict
     forward_settings = {
         "std_model_arch": std_model_arch, "rob_model_name": rob_model_name,
-        "use_nonlin_for_grad": use_nonlin_for_grad, "std_map": std_map, "rob_map": rob_map,
-        "alpha": alpha, "alpha_diffable": alpha_diffable, "parallel": True
+        "std_map": std_map, "rob_map": rob_map, "use_nonlin_for_grad": use_nonlin_for_grad,
+        "alpha": alpha, "alpha_diffable": alpha_diffable,
+        "parallel": True, "enable_autocast": use_fp16
     }
 
     # Build NonLinearMixedClassifier
@@ -127,16 +128,17 @@ def run_robustbench(
     else:  # Transformation must be None for CIFAR
         transform = None
 
-    # Run RobustBench benchmark!
-    seed_all(SEED)
-    mix_model.enable_autocast = use_fp16
     eps = 4. / 255. if dataset_name == 'imagenet' else 8. / 255.
     print(f"RobustBench on {dataset_name} with eps={eps:.4f} {threat_model} attack.")
+    batch_size = batch_size_per_gpu * max(torch.cuda.device_count(), 1)
+
+    # Run RobustBench benchmark!
+    seed_all(SEED)
     clean_acc, attacked_acc = benchmark(
         mix_model, model_name=model_full_name, to_disk=True, threat_model=threat_model,
         dataset=dataset_name, data_dir=f"data/{dataset_name}", n_examples=n_examples,
-        batch_size=batch_size_per_gpu * max(torch.cuda.device_count(), 1), eps=eps,
-        adaptive=adaptive, preprocessing=transform, device=torch.device(device)
+        batch_size=min(batch_size, n_examples), eps=eps, adaptive=adaptive,
+        preprocessing=transform, device=torch.device(device)
     )
     print(f"Clean accuracy: {clean_acc:.2%}.")
     print(f"{'Adaptive ' if adaptive else ''}AutoAttacked accuracy: {attacked_acc:.2%}.")

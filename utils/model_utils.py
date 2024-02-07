@@ -73,14 +73,15 @@ def load_std_model(
 
 
 def load_rob_model(
-    rob_model_name, dataset_name, pgd_type='l_inf', parallelize=False, device=torch.device('cpu')
+    rob_model_name, dataset_name, pgd_type='l_inf', root_dir='./base_models',
+    parallelize=False, device=torch.device('cpu')
 ):
     """ Load robust base classifier. """
 
     if rob_model_name is not None:  # Load RobustBench model
         print(f"Loading robust model: {rob_model_name} from RobustBench...")
         rob_model = load_model(
-            rob_model_name, model_dir='./base_models', dataset=dataset_name,
+            rob_model_name, model_dir=root_dir, dataset=dataset_name,
             threat_model=('Linf' if pgd_type == 'l_inf' else 'L2')
         )
     else:
@@ -104,7 +105,7 @@ def get_nonlin_mixed_classifier(forward_settings, dataset_name, root_dir):
 
     # Load robust base model
     rob_model_name = forward_settings["rob_model_name"]
-    rob_model = load_rob_model(rob_model_name, dataset_name)
+    rob_model = load_rob_model(rob_model_name, dataset_name, root_dir=root_dir)
 
     # Load standard base model
     std_model_arch = forward_settings["std_model_arch"]

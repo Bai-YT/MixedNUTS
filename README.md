@@ -7,8 +7,9 @@ by [Yatong Bai](https://bai-yt.github.io), [Mo Zhou](https://cdluminate.github.i
 **TL;DR:** MixedNUTS balances clean data classification accuracy and adversarial robustness without additional training 
 via a mixed classifier with nonlinear base model logit transformations.
 
-
-<img src="main_figure.jpg" alt="MixedNUTS Results" title="Results" width="800"/>
+<center>
+  <img src="main_figure.jpg" alt="MixedNUTS Results" title="Results" width="800"/>
+</center>
 
 
 #### Citing our work (BibTeX)
