@@ -2,7 +2,10 @@
 
 This is the official code implementation of the preprint paper \
 *[MixedNUTS: Training-Free Accuracy-Robustness Balance via Nonlinearly Mixed Classifiers](https://arxiv.org/abs/2402.02263)* \
-by [Yatong Bai](https://bai-yt.github.io), [Mo Zhou](https://cdluminate.github.io), [Vishal M. Patel](https://engineering.jhu.edu/faculty/vishal-patel), and [Somayeh Sojoudi](https://www2.eecs.berkeley.edu/Faculty/Homepages/sojoudi.html).
+by [Yatong Bai](https://bai-yt.github.io),
+[Mo Zhou](https://cdluminate.github.io),
+[Vishal M. Patel](https://engineering.jhu.edu/faculty/vishal-patel),
+and [Somayeh Sojoudi](https://www2.eecs.berkeley.edu/Faculty/Homepages/sojoudi.html).
 
 **TL;DR:** MixedNUTS balances clean data classification accuracy and adversarial robustness without additional training 
 via a mixed classifier with nonlinear base model logit transformations.
@@ -30,9 +33,10 @@ via a mixed classifier with nonlinear base model logit transformations.
 
 MixedNUTS is a training-free method that has no additional neural network components other than its base classifiers.
 
-All robust base classifiers used in the main result paper are available on [RobustBench](https://robustbench.github.io), and can be downloaded automatically via the RobustBench API.
+All robust base classifiers used in the main results of our paper are available on [RobustBench](https://robustbench.github.io)
+and can be downloaded automatically via the RobustBench API.
 
-Here, we provide the download links to the standard base classifiers used in our main results.
+Here, we provide the download links to the standard base classifiers used in the main results.
 
 | Dataset   | Link  |
 |-----------|-------|
@@ -54,7 +58,8 @@ base_models
     └───imagenet_std_convnext_v2-l_224.pt
 ```
 
-<span style="color:gray"> The CIFAR-10 and -100 accurate base classifiers are fine-tuned from [BiT](https://github.com/google-research/big_transfer) checkpoints.
+<span style="color:gray"> The CIFAR-10 and -100 accurate base classifiers are fine-tuned from
+[BiT](https://github.com/google-research/big_transfer) checkpoints.
 The ImageNet accurate base classifier is from the
 [ConvNeXt-V2](https://github.com/facebookresearch/ConvNeXt-V2) repository. </span>
 
@@ -103,6 +108,7 @@ Please refer to `scripts.sh` for the workflow of constructing MixedNUTS.
 
 ## Third-party Code
 
-`adaptive_autoattack.py`, `autopgd_base.py`, and `fab_pt.py` in `adaptive_autoattack` are modified based on [AutoAttack](https://github.com/fra31/auto-attack).
+`adaptive_autoattack.py`, `autopgd_base.py`, and `fab_pt.py` in `adaptive_autoattack`
+are modified based on [AutoAttack](https://github.com/fra31/auto-attack).
 
 `robust_bench.py` is modified based on [RobustBench](https://github.com/RobustBench/robustbench).
