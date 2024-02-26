@@ -23,8 +23,8 @@ In addition to `robustbench` and its dependencies, this implementation only requ
 - **Threat model**: Linf
 - **eps**: 8 / 255
 - **Clean accuracy**: 95.19 %
-- **AutoAttack accuracy**: Available soon
-- **Best-known robust accuracy**: Available soon
+- **AutoAttack accuracy**: 70.08 %
+- **Best-known robust accuracy**: 69.71 %
 - **Additional data**: True.
   The accurate base classifier was pre-trained on ImageNet; the robust base classifier used 50M synthetic images
 - **Evaluation method**: AutoAttack; Adaptive AutoAttack
@@ -55,8 +55,8 @@ In addition to `robustbench` and its dependencies, this implementation only requ
 - **Threat model**: Linf
 - **eps**: 4 / 255
 - **Clean accuracy**: 81.48 %
-- **AutoAttack accuracy**: Available soon
-- **Best-known robust accuracy**: Available soon
+- **AutoAttack accuracy**: 58.62 %
+- **Best-known robust accuracy**: 58.50 %
 - **Additional data**: True.
   The accurate base classifier was pre-trained on ImageNet-21k
 - **Evaluation method**: AutoAttack; Adaptive AutoAttack
