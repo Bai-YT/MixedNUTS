@@ -11,7 +11,7 @@ and [Somayeh Sojoudi](https://www2.eecs.berkeley.edu/Faculty/Homepages/sojoudi.h
 via a mixed classifier with nonlinear base model logit transformations.
 
 <center>
-  <img src="main_figure.jpg" alt="MixedNUTS Results" title="Results" width="800"/>
+  <img src="main_figure.png" alt="MixedNUTS Results" title="Results" width="800"/>
 </center>
 
 
