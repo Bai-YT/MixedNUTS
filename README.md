@@ -14,17 +14,7 @@ via a mixed classifier with nonlinear base model logit transformations.
   <img src="main_figure.png" alt="MixedNUTS Results" title="Results" width="800"/>
 </center>
 
-
-#### Citing our work (BibTeX)
-
-```bibtex
-@article{MixedNUTS,
-  title={MixedNUTS: Training-Free Accuracy-Robustness Balance via Nonlinearly Mixed Classifiers},
-  author={Bai, Yatong and Zhou, Mo and Patel, Vishal M. and Sojoudi, Somayeh},
-  journal={arXiv preprint arXiv:2402.02263},
-  year={2024}
-}
-```
+MixedNUTS has been accepted to Transactions on Machine Learning Research (TMLR).
 
 
 ## Getting Started
@@ -40,9 +30,9 @@ Here, we provide the download links to the standard base classifiers used in the
 
 | Dataset   | Link  |
 |-----------|-------|
-| CIFAR-10  | [Download](http://172.233.227.28/base_models/cifar10/cifar10_std_rn152.pt)    |
-| CIFAR-100 | [Download](http://172.233.227.28/base_models/cifar100/cifar100_std_rn152.pt)  |
-| ImageNet  | [Download](https://dl.fbaipublicfiles.com/convnext/convnextv2/im22k/convnextv2_large_22k_224_ema.pt)  |
+| CIFAR-10  | [Download](https://huggingface.co/Bai-YT/MixedNUTS/resolve/main/cifar10_std_rn152.pt?download=true)  |
+| CIFAR-100 | [Download](https://huggingface.co/Bai-YT/MixedNUTS/resolve/main/cifar100_std_rn152.pt?download=true) |
+| ImageNet  | [Download](https://dl.fbaipublicfiles.com/convnext/convnextv2/im22k/convnextv2_large_22k_224_ema.pt)    |
 
 After downloading the accurate base classifiers, create a `base_models` directory and organize as follows:
 ```
@@ -105,8 +95,21 @@ python run_robustbench.py --root_dir base_models --dataset_name imagenet \
 
 Please refer to `scripts.sh` for the workflow of constructing MixedNUTS.
 
+---
+---
 
-## Third-party Code
+### Citing our work (BibTeX)
+
+```bibtex
+@article{MixedNUTS,
+  title={MixedNUTS: Training-Free Accuracy-Robustness Balance via Nonlinearly Mixed Classifiers},
+  author={Bai, Yatong and Zhou, Mo and Patel, Vishal M. and Sojoudi, Somayeh},
+  journal={Transactions on Machine Learning Research},
+  year={2024}
+}
+```
+
+### Third-party Code
 
 `adaptive_autoattack.py`, `autopgd_base.py`, and `fab_pt.py` in `adaptive_autoattack`
 are modified based on [AutoAttack](https://github.com/fra31/auto-attack).
